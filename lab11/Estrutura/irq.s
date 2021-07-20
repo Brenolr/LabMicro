@@ -67,8 +67,17 @@ do_software_interrupt: @Rotina de Interrupçãode software
    mov pc, r14 @volta p/ o endereço armazenado em r14
  
 do_irq_interrupt: @Rotina de interrupções IRQ
-   STMFD sp!, {r0 - r3, LR} @Empilha os registradores
- 
+   STMFD sp!, {r0 - r3} @Empilha os registradores
+   LDR   r3, =linha_a
+   STMFD r3, {r0-r12}
+   STMFD r3, {pc}
+   STMFD r3, {sp}
+   STMFD r3, {lr}
+   MRS   r2, {cpsr} 
+   LDMFD sp!, r3
+   LDMFD sp!, r2
+   STMFD sp!, {r2-r3, LR} @Empilha os registradores
+
    LDR r0, INTPND @Carrega o registrador de status de interrupção
    LDR r0, [r0]
    TST r0, #0x0010 @verifica se é uma interupção de timer
