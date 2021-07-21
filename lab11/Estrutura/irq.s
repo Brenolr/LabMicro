@@ -92,18 +92,42 @@ do_irq_interrupt: @Rotina de interrupções IRQ
    STR   r11, [r3, r2, lsl #4]
    add   r2, r2, #1
    STR   r12, [r3, r2, lsl #4]
-   
-   STMFD r3!, {sp}
-   STMFD r3!, {lr}
-   MRS   r2, {cpsr} 
 
+   @ guardar pc
+   SUB r0, lr, #4
+   LDR r2, =15
+   STR r0, [r3,r2, lsl #4] @O PC do supervisor, seria o r15
+   @ guardar cpsr
+   MRS r0, {spsr}
+   LDR r2, =16
+   STR r0, [r3,r2, lsl #4]
+   @mudando estado para conseguir lr e sp em modo Supervisor
+   MRS r0, {cpsr}
+   ORR r0, r0, #0x00C1
+   MSR cpsr_c,r0 @enabling interrupts in the cps
 
-   add   r2, r2, #1
-   STR   lr, [r3, r2, lsl #4] @O PC do supervisor, seria o r15
-
-   
+   @ guardar sp
+   LDR r2, =13
+   STR sp, [r3,r2, lsl #4]
+   @ guardar lr
+   ADD r2, r2, #1
+   STR lr, [r3,r2, lsl #4]
+   @voltando para estado de Interrupcao
+   MRS r0, {cpsr}
+   AND r0, r0, #0xFFFD
+   MSR cpsr_c,r0
+   @ guardar r2 e r3
+   @ Recuperando os registradores sujos
    LDMFD sp!, r3
    LDMFD sp!, r2
+   LDR r0, =linha_a
+   ADD r0, r0, #12
+   STR r3, [r0]
+   SUB r0, r0, #4
+   STR r2,[r0]
+
+   @STMFD r3!, {sp}
+   @STMFD r3!, {lr}
    
    STMFD sp!, {r2-r3, LR} @Empilha os registradores
 
