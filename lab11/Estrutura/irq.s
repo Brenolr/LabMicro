@@ -59,7 +59,7 @@ irq:
    b do_irq_interrupt @vai para o handler de interrupções IRQ
  
 fiq:
-   b .
+   b . 
  
  
 do_software_interrupt: @Rotina de Interrupçãode software
@@ -68,14 +68,43 @@ do_software_interrupt: @Rotina de Interrupçãode software
  
 do_irq_interrupt: @Rotina de interrupções IRQ
    STMFD sp!, {r0 - r3} @Empilha os registradores
-   LDR   r3, =linha_a
-   STMFD r3, {r0-r12}
-   STMFD r3, {pc}
-   STMFD r3, {sp}
-   STMFD r3, {lr}
+   LDR   r3, =linha_a @vamos fazer um vetor, vamos sujar r2 e r3, mas vamos recuperar depois
+   LDR   r2, =0
+
+   STR   r0, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r1, [r3, r2, lsl #4]
+   add   r2, r2, #3
+   STR   r4, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r5, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r6, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r7, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r8, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r9, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r10, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r11, [r3, r2, lsl #4]
+   add   r2, r2, #1
+   STR   r12, [r3, r2, lsl #4]
+   
+   STMFD r3!, {sp}
+   STMFD r3!, {lr}
    MRS   r2, {cpsr} 
+
+
+   add   r2, r2, #1
+   STR   lr, [r3, r2, lsl #4] @O PC do supervisor, seria o r15
+
+   
    LDMFD sp!, r3
    LDMFD sp!, r2
+   
    STMFD sp!, {r2-r3, LR} @Empilha os registradores
 
    LDR r0, INTPND @Carrega o registrador de status de interrupção
