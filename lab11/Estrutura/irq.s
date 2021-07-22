@@ -119,7 +119,7 @@ do_irq_interrupt: @Rotina de interrupções IRQ
    @ guardar r2 e r3
    @ Recuperando os registradores sujos
    LDMFD sp!, {r0-r3}
-   STMFD sp!, {r2-r3, LR} @Empilha os registradores
+   STMFD sp!, {r0-r3, LR} @Empilha os registradores
    @LDMFD sp!, {r2}
    LDR r0, =linha_a
    ADD r0, r0, #12
@@ -138,6 +138,62 @@ do_irq_interrupt: @Rotina de interrupções IRQ
    STMFD sp!, {pc}         @ salva pc na pilha do modo de interrupções
    BLNE handler_timer @vai para o rotina de tratamento da interupção de timer
    LDMFD sp!, {r0 - r3,lr} @retorna
+   @ Recuperando tudo
+   @ Recuperando r0 até r1
+   LDR   r3, =linha_a @vamos fazer um vetor, vamos sujar r2 e r3, mas vamos recuperar depois
+   LDR   r2, =0
+
+   LDR   r0, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r1, [r3, r2, lsl #2]
+   add   r2, r2, #3
+   LDR   r4, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r5, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r6, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r7, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r8, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r9, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r10, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r11, [r3, r2, lsl #2]
+   add   r2, r2, #1
+   LDR   r12, [r3, r2, lsl #2]
+   STMFD sp!, {r0-r12}
+   @Mudar de modo
+   LDR r3, =linha_a
+   LDR r2, =16
+   LDR r0,[r3, r2, lsl #2]
+   @Salvando sp em r4
+   LDR r2, =13
+   LDR r4,[r3, r2, lsl #2]
+   @Salvando lr em r5
+   LDR r2, =14
+   LDR r5,[r3, r2, lsl #2]
+   @Mudando de modo efetivamente
+   MSR cpsr,r0
+   @Atualizando lr em Supervisor
+   MOV lr, r5
+   @Atualizando sp em Supervisor
+   MOV sp, r4
+   @ Voltando para modo interrupcao
+   BIC r0, r0, #1
+   MSR cpsr, r0
+   @ Recuperando regs
+   LDMFD sp!, {r0-r12}
+   @Recuperando r2 e r3
+   STMFD sp!, {r0-r1}
+   LDR r0, =linha_a
+   LDR r1, =2
+   LDR  r2, [r0, r1, lsl #2]
+   ADD r1, r1, #1
+   LDR  r3, [r0, r1, lsl #2]
+   LDMFD sp!, {r0-r1}
    sub lr, lr, #4  @ corrigindo o lr
    STMFD sp!, {lr}
    LDMFD sp!, {pc}^
