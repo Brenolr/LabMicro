@@ -1,7 +1,7 @@
 #include "print.h"
 
 void print_hashtag() {
-  print_uart0("#");
+  print_uart0("\n#\n");
 }
 
 void print_espaco() {

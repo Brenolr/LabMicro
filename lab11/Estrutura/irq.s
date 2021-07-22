@@ -277,7 +277,7 @@ timer_init:
   mov r1, #0xA0 @enable timer module
   str r1, [r0]
   ldr r0, TIMER0V
-  mov r1, #0xff @setting timer value
+  mov r1, #0x1 @setting timer value
   str r1,[r0]
   mrs r0, cpsr
   bic r0,r0,#0x80
