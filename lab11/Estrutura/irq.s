@@ -71,55 +71,56 @@ do_irq_interrupt: @Rotina de interrupções IRQ
    LDR   r3, =linha_a @vamos fazer um vetor, vamos sujar r2 e r3, mas vamos recuperar depois
    LDR   r2, =0
 
-   STR   r0, [r3, r2, lsl #4]
+   STR   r0, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r1, [r3, r2, lsl #4]
+   STR   r1, [r3, r2, lsl #2]
    add   r2, r2, #3
-   STR   r4, [r3, r2, lsl #4]
+   STR   r4, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r5, [r3, r2, lsl #4]
+   STR   r5, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r6, [r3, r2, lsl #4]
+   STR   r6, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r7, [r3, r2, lsl #4]
+   STR   r7, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r8, [r3, r2, lsl #4]
+   STR   r8, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r9, [r3, r2, lsl #4]
+   STR   r9, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r10, [r3, r2, lsl #4]
+   STR   r10, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r11, [r3, r2, lsl #4]
+   STR   r11, [r3, r2, lsl #2]
    add   r2, r2, #1
-   STR   r12, [r3, r2, lsl #4]
+   STR   r12, [r3, r2, lsl #2]
 
    @ guardar pc
    SUB r0, lr, #4
    LDR r2, =15
-   STR r0, [r3,r2, lsl #4] @O PC do supervisor, seria o r15
+   STR r0, [r3,r2, lsl #2] @O PC do supervisor, seria o r15
    @ guardar cpsr
-   MRS r0, {spsr}
+   MRS r0, spsr
    LDR r2, =16
-   STR r0, [r3,r2, lsl #4]
+   STR r0, [r3,r2, lsl #2]
    @mudando estado para conseguir lr e sp em modo Supervisor
-   MRS r0, {cpsr}
+   MRS r0, cpsr
    ORR r0, r0, #0x00C1
    MSR cpsr_c,r0 @enabling interrupts in the cps
 
    @ guardar sp
    LDR r2, =13
-   STR sp, [r3,r2, lsl #4]
+   STR sp, [r3,r2, lsl #2]
    @ guardar lr
    ADD r2, r2, #1
-   STR lr, [r3,r2, lsl #4]
+   STR lr, [r3,r2, lsl #2]
    @voltando para estado de Interrupcao
-   MRS r0, {cpsr}
-   AND r0, r0, #0xFFFD
+   MRS r0, cpsr
+   BIC r0, r0, #0x1
    MSR cpsr_c,r0
    @ guardar r2 e r3
    @ Recuperando os registradores sujos
-   LDMFD sp!, r3
-   LDMFD sp!, r2
+   LDMFD sp!, {r0-r3}
+   STMFD sp!, {r2-r3, LR} @Empilha os registradores
+   @LDMFD sp!, {r2}
    LDR r0, =linha_a
    ADD r0, r0, #12
    STR r3, [r0]
@@ -129,7 +130,7 @@ do_irq_interrupt: @Rotina de interrupções IRQ
    @STMFD r3!, {sp}
    @STMFD r3!, {lr}
    
-   STMFD sp!, {r2-r3, LR} @Empilha os registradores
+   @STMFD sp!, {r2-r3, LR} @Empilha os registradores
 
    LDR r0, INTPND @Carrega o registrador de status de interrupção
    LDR r0, [r0]
