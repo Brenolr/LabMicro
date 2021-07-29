@@ -1,0 +1,27 @@
+# No primeiro terminal_start
+eabi-gcc script.c -o script.o 
+eabi-as irq.s -o irq.o
+eabi-as startup.s -o startup.o
+eabi-ld -T irqld.ld irq.o startup.o script.o -o irq.elf
+eabi-bin irq.elf irq.bin
+qemu irq.bin
+
+eabi-gcc script.c -o script.o  && eabi-as startup.s -o startup.o && eabi-ld -T irqld.ld startup.o script.o -o irq.elf && eabi-bin irq.elf irq.bin && qemu irq.bin
+
+
+# No outro terminal
+eabi-qemu -se irq.elf
+
+# No gdb
+b _start
+b timer_init
+b handler_timer
+b do_irq_interrupt
+b main
+
+Lab passado:
+	/* 	eabi-gcc test.c -o test.o  */	
+	/* 	eabi-as startup.s -o startup.o  */	
+	/* 	eabi-ld -T vector_table.ld test.o startup.o -o program.elf  */	
+	/* 	eabi-bin program.elf program.bin  */	
+	/* 	qemu program.bin */	
