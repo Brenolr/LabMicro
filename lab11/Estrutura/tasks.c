@@ -1,7 +1,7 @@
 #include "print.h"
 
-const char *nome = "Bruno Borges Paschoalinoto\n";
-const char *nusp = "10687472\n";
+const char *nome = "Breno Loscher Rocha\n";
+const char *nusp = "9784439\n";
 const char *ptr1, *ptr2;
 
 void task_a(void) {

@@ -8,6 +8,9 @@ char *tab = "0123456789ABCDEF";
 #include "vid.c"
 #include "exceptions.c"
 #include "sdc.c"
+#include <stdint.h>
+typedef uint32_t u32;
+
 void copy_vectors(void)
 { // same as before }
     void IRQ_handler()

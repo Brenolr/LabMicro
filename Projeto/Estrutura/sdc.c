@@ -1,12 +1,18 @@
 /*********** sdc.c ARM PL180 SDC driver **********/
 #include "sdc.h"
+#include <stdint.h>
+typedef uint32_t u32;
+
+
 u32 base;
+
 #define printf kprintf
 int delay()
 {
     int i;
-    for (i = 0; i < 100; i++)
-        ;
+    for (i = 0; i < 100; i++){
+
+    }
 }
 int do_command(int cmd, int arg, int resp)
 {
