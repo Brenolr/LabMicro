@@ -1,57 +1,35 @@
-#include "types.h"
-#include "versatilepb_pl190_vic.h"
-#include "uart.h"
+int v[] = {1,2,3,4,5,6,7,8,9,10};
+int sum;
 
-extern UART uart[4];
-extern void uart_handler(UART *up);
+#include "uart.c"
+#include "string.c"
 
-extern void uprints(UART *up, u8 *s);
-extern void ugets(UART *up, char *s);
-
-void main()
+int main()
 {
-    u8 line[128];
+    int i;
+    char string[64];
     UART *up;
-    VIC_INTENABLE |= UART0_IRQ_VIC_BIT;
-    VIC_INTENABLE |= UART1_IRQ_VIC_BIT;
-
     uart_init();
-    up= &uart[0];
+    up = &uart[0];
+    uprints(up, "\n\rEnter lines from serial terminal 0\n\r");
 
-    while(1)
-    {
-        uprints(up, "Enter a line from UART:\n\r");
-        ugets(up, line);
-        uprints(up, "You have entered below line from UART:\n\r");
-        uprints(up, line);
+    while(1){
+        upgets(up, string);
+        uprints(up, "\n\r[You have input:] ");
+        uprints(up, string);
+        uprints(up, "\n\r");
+        if(strcmp(string, "end")==0){
+            break;
+        }        
     }
-}
-
-void copy_vectors()
-{
-    extern u32 vectors_start, vectors_end;
-    u32 *vectors_src = &vectors_start;
-    u32 *vectors_dst = (u32 *)0;
-    while(vectors_src < &vectors_end)
-    {
-        *vectors_dst++ = *vectors_src++;
-    }
-}
-
-void IRQ_handler()
-{
-    u32 vicstatus = VIC_STATUS;
-
-    //UART 0
-    if(vicstatus & UART0_IRQ_VIC_BIT)
-    {
-        uart_handler(&uart[0]);
+    uprints(up, "Compute sum of array:\n\r");
+    sum = 0;
+    for(i=0; i<10; i++){
+        sum += v[i];
     }
 
-    //UART 1
-    if(vicstatus & UART1_IRQ_VIC_BIT)
-    {
-        uart_handler(&uart[1]);
-    }
-
+    uprints(up, "sum = ");
+    uputc(up, (sum/10)+'0');
+    uputc(up, (sum%10)+'0');
+    uprints(up, "\n\rEND OF RUN\n\r");
 }

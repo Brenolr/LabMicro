@@ -1,4 +1,0 @@
-handle SIGUSR1 nostop pass
-layout regs
-focus cmd
-load

@@ -1,12 +1,7 @@
-#include "defines.h"
 #include "string.c"
 #define printf kprintf
 char *tab = "0123456789ABCDEF";
 #include "uart.c"
-#include "kbd.c"
-#include "timer.c"
-#include "vid.c"
-#include "exceptions.c"
 #include "sdc.c"
 #include <stdint.h>
 typedef uint32_t u32;
