@@ -1,91 +1,57 @@
-#include "defines.h"
-#include "string.c"
-#define printf kprintf
-char *tab = "0123456789ABCDEF";
-#include "uart.c"
-#include "kbd.c"
-#include "timer.c"
-#include "vid.c"
-#include "exceptions.c"
-#include "sdc.c"
-void copy_vectors(void)
-{ // same as before }
-    void IRQ_handler()
+#include "types.h"
+#include "versatilepb_pl190_vic.h"
+#include "uart.h"
+
+extern UART uart[4];
+extern void uart_handler(UART *up);
+
+extern void uprints(UART *up, u8 *s);
+extern void ugets(UART *up, char *s);
+
+void main()
+{
+    u8 line[128];
+    UART *up;
+    VIC_INTENABLE |= UART0_IRQ_VIC_BIT;
+    VIC_INTENABLE |= UART1_IRQ_VIC_BIT;
+
+    uart_init();
+    up= &uart[0];
+
+    while(1)
     {
-        int vicstatus, sicstatus;
-        int ustatus, kstatus;
-        // read VIC SIV status registers to find out which interrupt
-        vicstatus = VIC_STATUS;
-        sicstatus = SIC_STATUS;
-        // VIC status BITs: timer0=4, uart0=13, uart1=14, SIC=31: KBD at 3
-        if (vicstatus & (1 << 4))
-        { // bit 4: timer0
-            timer_handler(0);
-        }
-        if (vicstatus & (1 << 12))
-        { // Bit 12: UART0
-            uart_handler(&uart[0]);
-        }
-        if (vicstatus & (1 << 13))
-        { // bit 13: UART1
-            uart_handler(&uart[1]);
-        }
-        if (vicstatus & (1 << 31))
-        { // SIC interrupts=bit_31 on VIC
-            if (sicstatus & (1 << 3))
-            { // KBD at IRQ3 of SIC
-                kbd_handler();
-            }
-            if (sicstatus & (1 << 22))
-            { // SDC at IRQ22 of SIC
-                sdc_handler();
-            }
-        }
+        uprints(up, "Enter a line from UART:\n\r");
+        ugets(up, line);
+        uprints(up, "You have entered below line from UART:\n\r");
+        uprints(up, line);
     }
-    char rbuf[512], wbuf[512];
-    char *line[2] = {"THIS IS A TEST LINE", "this is a test line"};
-    int main()
+}
+
+void copy_vectors()
+{
+    extern u32 vectors_start, vectors_end;
+    u32 *vectors_src = &vectors_start;
+    u32 *vectors_dst = (u32 *)0;
+    while(vectors_src < &vectors_end)
     {
-        int i, sector, N;
-        fbuf_init();
-        kbd_init();
-        uart_init();
-        /* enable timer0,1, uart0,1 SIC interrupts */
-        VIC_INTENABLE = (1 << 4);   // timer0,1 at bit4
-        VIC_INTENABLE |= (1 << 12); // UART0 at bit12
-        VIC_INTENABLE |= (1 << 13); // UART1 at bit13
-        VIC_INTENABLE |= (1 << 31); // SIC to VIC's IRQ31
-        /* enable KBD and SDC IRQ */
-        SIC_INTENABLE = (1 << 3);   // KBD int=bit3 on SIC
-        SIC_INTENABLE |= (1 << 22); // SDC int=bit22 on SIC
-        SIC_ENSET = (1 << 3);       // KBD int=3 on SIC
-        SIC_ENSET |= (1 << 22);     // SDC int=22 on SIC
-        timer_init();
-        timer_start(0);
-        /* Code for testing UART and KBD drivers are omitted */
-        printf("test SDC DRIVER\n");
-        sdc_init();
-        N = 1; // Write|Read N sectors of SDC
-        for (sector = 0; sector < N; sector++)
-        {
-            printf("WRITE sector %d: ", sector);
-            memset(wbuf, ' ', 512);  // blank out wbuf
-            for (i = 0; i < 12; i++) // write lines to wbuf
-                strcpy(wbuf + i * 40, line[sector % 2]);
-            put_sector(sector, wbuf);
-        }
-        printf("\n");
-        for (sector = 0; sector < N; sector++)
-        {
-            printf("READ sector %d\n", sector);
-            get_sector(sector, rbuf);
-            for (i = 0; i < 512; i++)
-            {
-                printf("%c", rbuf[i]);
-            }
-            printf("\n");
-        }
-        printf("in while(1) loop: enter keys from KBD or UART\n");
-        while (1)
-            ;
+        *vectors_dst++ = *vectors_src++;
     }
+}
+
+void IRQ_handler()
+{
+    u32 vicstatus = VIC_STATUS;
+
+    //UART 0
+    if(vicstatus & UART0_IRQ_VIC_BIT)
+    {
+        uart_handler(&uart[0]);
+    }
+
+    //UART 1
+    if(vicstatus & UART1_IRQ_VIC_BIT)
+    {
+        uart_handler(&uart[1]);
+    }
+
+}
