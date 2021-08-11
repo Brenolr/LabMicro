@@ -10,7 +10,7 @@
 	.eabi_attribute 34, 0
 	.eabi_attribute 18, 4
 	.code	16
-	.file	"t.c"
+	.file	"full.c"
 	.global	v
 	.data
 	.align	2
@@ -28,6 +28,7 @@ v:
 	.word	9
 	.word	10
 	.comm	sum,4,4
+	.comm	timer,144,4
 	.comm	uart,32,4
 	.text
 	.align	2
@@ -68,7 +69,6 @@ uart_init:
 	ldr	r3, .L4
 	ldr	r2, .L4+8
 	str	r2, [r3, #24]
-	mov	r0, r3
 	mov	sp, r7
 	add	sp, sp, #8
 	@ sp needed for prologue
@@ -274,29 +274,439 @@ strcmp:
 	@ sp needed for prologue
 	pop	{r7, pc}
 	.size	strcmp, .-strcmp
+	.align	2
+	.global	strcpy
+	.code	16
+	.thumb_func
+	.type	strcpy, %function
+strcpy:
+	push	{r7, lr}
+	sub	sp, sp, #8
+	add	r7, sp, #0
+	str	r0, [r7, #4]
+	str	r1, [r7]
+	b	.L22
+.L23:
+	ldr	r3, [r7]
+	ldrb	r2, [r3]
+	ldr	r3, [r7, #4]
+	strb	r2, [r3]
+	ldr	r3, [r7, #4]
+	add	r3, r3, #1
+	str	r3, [r7, #4]
+	ldr	r3, [r7]
+	add	r3, r3, #1
+	str	r3, [r7]
+.L22:
+	ldr	r3, [r7]
+	ldrb	r3, [r3]
+	cmp	r3, #0
+	bne	.L23
+	ldr	r3, [r7, #4]
+	mov	r2, #0
+	strb	r2, [r3]
+	ldr	r3, [r7, #4]
+	mov	r0, r3
+	mov	sp, r7
+	add	sp, sp, #8
+	@ sp needed for prologue
+	pop	{r7, pc}
+	.size	strcpy, .-strcpy
+	.align	2
+	.global	strlen
+	.code	16
+	.thumb_func
+	.type	strlen, %function
+strlen:
+	push	{r7, lr}
+	sub	sp, sp, #16
+	add	r7, sp, #0
+	str	r0, [r7, #4]
+	mov	r3, #0
+	str	r3, [r7, #12]
+	b	.L25
+.L26:
+	ldr	r3, [r7, #12]
+	add	r3, r3, #1
+	str	r3, [r7, #12]
+.L25:
+	ldr	r3, [r7, #4]
+	ldrb	r3, [r3]
+	sub	r2, r3, #1
+	sbc	r3, r3, r2
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	ldr	r2, [r7, #4]
+	add	r2, r2, #1
+	str	r2, [r7, #4]
+	cmp	r3, #0
+	bne	.L26
+	ldr	r3, [r7, #12]
+	mov	r0, r3
+	mov	sp, r7
+	add	sp, sp, #16
+	@ sp needed for prologue
+	pop	{r7, pc}
+	.size	strlen, .-strlen
+	.align	2
+	.global	timer_init_single
+	.code	16
+	.thumb_func
+	.type	timer_init_single, %function
+timer_init_single:
+	push	{r7, lr}
+	sub	sp, sp, #8
+	add	r7, sp, #0
+	str	r0, [r7, #4]
+	str	r1, [r7]
+	ldr	r2, [r7]
+	ldr	r3, [r7, #4]
+	str	r2, [r3]
+	ldr	r3, [r7, #4]
+	ldr	r3, [r3]
+	mov	r2, #0
+	str	r2, [r3]
+	ldr	r3, [r7, #4]
+	ldr	r3, [r3]
+	add	r3, r3, #4
+	mov	r2, #1
+	neg	r2, r2
+	str	r2, [r3]
+	ldr	r3, [r7, #4]
+	ldr	r3, [r3]
+	add	r3, r3, #16
+	mov	r2, #0
+	str	r2, [r3]
+	ldr	r3, [r7, #4]
+	ldr	r3, [r3]
+	add	r3, r3, #20
+	mov	r2, #0
+	str	r2, [r3]
+	ldr	r3, [r7, #4]
+	ldr	r3, [r3]
+	mov	r2, #128
+	lsl	r2, r2, #1
+	str	r2, [r3]
+	ldr	r3, [r7, #4]
+	ldr	r3, [r3]
+	add	r3, r3, #8
+	mov	r2, #102
+	str	r2, [r3]
+	ldr	r3, [r7, #4]
+	ldr	r3, [r3]
+	add	r3, r3, #24
+	mov	r2, #224
+	lsl	r2, r2, #5
+	str	r2, [r3]
+	mov	r3, #0
+	ldr	r2, [r7, #4]
+	str	r3, [r2, #16]
+	ldr	r2, [r7, #4]
+	str	r3, [r2, #12]
+	mov	r2, r3
+	ldr	r3, [r7, #4]
+	str	r2, [r3, #8]
+	ldr	r3, [r7, #4]
+	str	r2, [r3, #4]
+	mov	sp, r7
+	add	sp, sp, #8
+	@ sp needed for prologue
+	pop	{r7, pc}
+	.size	timer_init_single, .-timer_init_single
+	.align	2
+	.global	timer_start
+	.code	16
+	.thumb_func
+	.type	timer_start, %function
+timer_start:
+	push	{r7, lr}
+	sub	sp, sp, #16
+	add	r7, sp, #0
+	str	r0, [r7, #4]
+	ldr	r2, [r7, #4]
+	mov	r3, r2
+	lsl	r3, r3, #3
+	add	r3, r3, r2
+	lsl	r3, r3, #2
+	mov	r2, r3
+	ldr	r3, .L29
+	add	r3, r2, r3
+	str	r3, [r7, #12]
+	ldr	r3, [r7, #12]
+	ldr	r2, [r3]
+	mov	r3, r2
+	add	r3, r3, #8
+	add	r2, r2, #8
+	ldr	r2, [r2]
+	mov	r1, #128
+	orr	r2, r1
+	str	r2, [r3]
+	mov	sp, r7
+	add	sp, sp, #16
+	@ sp needed for prologue
+	pop	{r7, pc}
+.L30:
+	.align	2
+.L29:
+	.word	timer
+	.size	timer_start, .-timer_start
+	.align	2
+	.global	timer_stop
+	.code	16
+	.thumb_func
+	.type	timer_stop, %function
+timer_stop:
+	push	{r7, lr}
+	sub	sp, sp, #16
+	add	r7, sp, #0
+	str	r0, [r7, #4]
+	ldr	r2, [r7, #4]
+	mov	r3, r2
+	lsl	r3, r3, #3
+	add	r3, r3, r2
+	lsl	r3, r3, #2
+	mov	r2, r3
+	ldr	r3, .L32
+	add	r3, r2, r3
+	str	r3, [r7, #12]
+	ldr	r3, [r7, #12]
+	ldr	r2, [r3]
+	mov	r3, r2
+	add	r3, r3, #8
+	add	r2, r2, #8
+	ldr	r1, [r2]
+	mov	r2, #127
+	and	r2, r1
+	str	r2, [r3]
+	mov	sp, r7
+	add	sp, sp, #16
+	@ sp needed for prologue
+	pop	{r7, pc}
+.L33:
+	.align	2
+.L32:
+	.word	timer
+	.size	timer_stop, .-timer_stop
+	.align	2
+	.global	timer_clearInterrupt
+	.code	16
+	.thumb_func
+	.type	timer_clearInterrupt, %function
+timer_clearInterrupt:
+	push	{r7, lr}
+	sub	sp, sp, #16
+	add	r7, sp, #0
+	str	r0, [r7, #4]
+	ldr	r2, [r7, #4]
+	mov	r3, r2
+	lsl	r3, r3, #3
+	add	r3, r3, r2
+	lsl	r3, r3, #2
+	mov	r2, r3
+	ldr	r3, .L35
+	add	r3, r2, r3
+	str	r3, [r7, #12]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3]
+	add	r3, r3, #12
+	mov	r2, #1
+	neg	r2, r2
+	str	r2, [r3]
+	mov	sp, r7
+	add	sp, sp, #16
+	@ sp needed for prologue
+	pop	{r7, pc}
+.L36:
+	.align	2
+.L35:
+	.word	timer
+	.size	timer_clearInterrupt, .-timer_clearInterrupt
+	.global	__aeabi_uidivmod
+	.global	__aeabi_uidiv
+	.align	2
+	.global	timer_handler
+	.code	16
+	.thumb_func
+	.type	timer_handler, %function
+timer_handler:
+	push	{r7, lr}
+	sub	sp, sp, #16
+	add	r7, sp, #0
+	str	r0, [r7, #4]
+	ldr	r2, [r7, #4]
+	mov	r3, r2
+	lsl	r3, r3, #3
+	add	r3, r3, r2
+	lsl	r3, r3, #2
+	mov	r2, r3
+	ldr	r3, .L40
+	add	r3, r2, r3
+	str	r3, [r7, #12]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #4]
+	add	r2, r3, #1
+	ldr	r3, [r7, #12]
+	str	r2, [r3, #4]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #4]
+	cmp	r3, #20
+	bne	.L38
+	ldr	r3, [r7, #12]
+	mov	r2, #0
+	str	r2, [r3, #4]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #16]
+	add	r2, r3, #1
+	ldr	r3, [r7, #12]
+	str	r2, [r3, #16]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #16]
+	cmp	r3, #60
+	bne	.L39
+	ldr	r3, [r7, #12]
+	mov	r2, #0
+	str	r2, [r3, #16]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #12]
+	add	r2, r3, #1
+	ldr	r3, [r7, #12]
+	str	r2, [r3, #12]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #12]
+	cmp	r3, #60
+	bne	.L39
+	ldr	r3, [r7, #12]
+	mov	r2, #0
+	str	r2, [r3, #12]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #8]
+	add	r2, r3, #1
+	ldr	r3, [r7, #12]
+	str	r2, [r3, #8]
+.L39:
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #16]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidivmod
+	mov	r3, r1
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r2, r3, #24
+	ldr	r3, [r7, #12]
+	strb	r2, [r3, #27]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #16]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidiv
+	mov	r3, r0
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r2, r3, #24
+	ldr	r3, [r7, #12]
+	strb	r2, [r3, #26]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #12]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidivmod
+	mov	r3, r1
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r2, r3, #24
+	ldr	r3, [r7, #12]
+	strb	r2, [r3, #24]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #12]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidiv
+	mov	r3, r0
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r2, r3, #24
+	ldr	r3, [r7, #12]
+	strb	r2, [r3, #23]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #8]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidivmod
+	mov	r3, r1
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r2, r3, #24
+	ldr	r3, [r7, #12]
+	strb	r2, [r3, #21]
+	ldr	r3, [r7, #12]
+	ldr	r3, [r3, #8]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidiv
+	mov	r3, r0
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r2, r3, #24
+	ldr	r3, [r7, #12]
+	strb	r2, [r3, #20]
+.L38:
+	ldr	r3, [r7, #4]
+	mov	r0, r3
+	bl	timer_clearInterrupt
+	mov	sp, r7
+	add	sp, sp, #16
+	@ sp needed for prologue
+	pop	{r7, pc}
+.L41:
+	.align	2
+.L40:
+	.word	timer
+	.size	timer_handler, .-timer_handler
 	.section	.rodata
 	.align	2
-.LC2:
+.LC7:
 	.ascii	"\012\015Enter lines from serial terminal 0\012\015\000"
 	.align	2
-.LC4:
-	.ascii	"\012\015[You have input:] \000"
+.LC9:
+	.ascii	"   \000"
 	.align	2
-.LC6:
+.LC11:
 	.ascii	"\012\015\000"
 	.align	2
-.LC8:
+.LC13:
 	.ascii	"end\000"
 	.align	2
-.LC10:
+.LC15:
 	.ascii	"Compute sum of array:\012\015\000"
 	.align	2
-.LC14:
+.LC19:
 	.ascii	"sum = \000"
 	.global	__aeabi_idiv
 	.global	__aeabi_idivmod
 	.align	2
-.LC16:
+.LC21:
+	.ascii	"h:\000"
+	.align	2
+.LC23:
+	.ascii	" m:\000"
+	.align	2
+.LC25:
+	.ascii	" s:\000"
+	.align	2
+.LC27:
 	.ascii	"\012\015END OF RUN\012\015\000"
 	.text
 	.align	2
@@ -306,82 +716,114 @@ strcmp:
 	.type	main, %function
 main:
 	push	{r7, lr}
-	sub	sp, sp, #72
+	sub	sp, sp, #96
 	add	r7, sp, #0
+	ldr	r3, .L49
+	str	r3, [r7, #88]
+	ldr	r2, [r7, #88]
+	ldr	r3, .L49+4
+	mov	r0, r2
+	mov	r1, r3
+	bl	timer_init_single
 	bl	uart_init
-	ldr	r3, .L28
-	str	r3, [r7, #64]
-	ldr	r2, [r7, #64]
-	ldr	r3, .L28+4
+	ldr	r3, .L49+8
+	str	r3, [r7, #84]
+	mov	r0, #0
+	bl	timer_start
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+12
 	mov	r0, r2
 	mov	r1, r3
 	bl	uprints
-	b	.L24
-.L27:
+	b	.L45
+.L48:
 	mov	r8, r8
-.L24:
-	ldr	r2, [r7, #64]
-	mov	r3, r7
+.L45:
+	ldr	r2, [r7, #84]
+	add	r3, r7, #4
 	mov	r0, r2
 	mov	r1, r3
 	bl	upgets
-	ldr	r2, [r7, #64]
-	ldr	r3, .L28+8
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+16
 	mov	r0, r2
 	mov	r1, r3
 	bl	uprints
-	ldr	r2, [r7, #64]
-	mov	r3, r7
+	ldr	r2, [r7, #84]
+	add	r3, r7, #4
 	mov	r0, r2
 	mov	r1, r3
 	bl	uprints
-	ldr	r2, [r7, #64]
-	ldr	r3, .L28+12
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+20
 	mov	r0, r2
 	mov	r1, r3
 	bl	uprints
-	mov	r2, r7
-	ldr	r3, .L28+16
+	add	r2, r7, #4
+	ldr	r3, .L49+24
 	mov	r0, r2
 	mov	r1, r3
 	bl	strcmp
 	mov	r3, r0
-	bne	.L27
+	bne	.L48
 	mov	r8, r8
-	ldr	r2, [r7, #64]
-	ldr	r3, .L28+20
+	ldr	r3, [r7, #88]
+	ldr	r3, [r3, #8]
+	str	r3, [r7, #80]
+	ldr	r3, [r7, #88]
+	ldr	r3, [r3, #12]
+	str	r3, [r7, #76]
+	ldr	r3, [r7, #88]
+	ldr	r3, [r3, #16]
+	str	r3, [r7, #72]
+	ldr	r3, [r7, #80]
+	mov	r2, #225
+	lsl	r2, r2, #4
+	mov	r1, r2
+	mul	r1, r3
+	ldr	r2, [r7, #76]
+	mov	r3, r2
+	lsl	r3, r3, #4
+	sub	r3, r3, r2
+	lsl	r3, r3, #2
+	add	r2, r1, r3
+	ldr	r3, [r7, #72]
+	add	r3, r2, r3
+	str	r3, [r7, #68]
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+28
 	mov	r0, r2
 	mov	r1, r3
 	bl	uprints
-	ldr	r3, .L28+24
+	ldr	r3, .L49+32
 	mov	r2, #0
 	str	r2, [r3]
 	mov	r3, #0
-	str	r3, [r7, #68]
-	b	.L25
-.L26:
-	ldr	r3, .L28+28
-	ldr	r2, [r7, #68]
+	str	r3, [r7, #92]
+	b	.L46
+.L47:
+	ldr	r3, .L49+36
+	ldr	r2, [r7, #92]
 	lsl	r2, r2, #2
 	ldr	r2, [r2, r3]
-	ldr	r3, .L28+24
+	ldr	r3, .L49+32
 	ldr	r3, [r3]
 	add	r2, r2, r3
-	ldr	r3, .L28+24
+	ldr	r3, .L49+32
 	str	r2, [r3]
-	ldr	r3, [r7, #68]
+	ldr	r3, [r7, #92]
 	add	r3, r3, #1
-	str	r3, [r7, #68]
-.L25:
-	ldr	r3, [r7, #68]
+	str	r3, [r7, #92]
+.L46:
+	ldr	r3, [r7, #92]
 	cmp	r3, #9
-	ble	.L26
-	ldr	r2, [r7, #64]
-	ldr	r3, .L28+32
+	ble	.L47
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+40
 	mov	r0, r2
 	mov	r1, r3
 	bl	uprints
-	ldr	r3, .L28+24
+	ldr	r3, .L49+32
 	ldr	r3, [r3]
 	mov	r0, r3
 	mov	r1, #10
@@ -392,11 +834,11 @@ main:
 	add	r3, r3, #48
 	lsl	r3, r3, #24
 	lsr	r3, r3, #24
-	ldr	r2, [r7, #64]
+	ldr	r2, [r7, #84]
 	mov	r0, r2
 	mov	r1, r3
 	bl	uputc
-	ldr	r3, .L28+24
+	ldr	r3, .L49+32
 	ldr	r3, [r3]
 	mov	r0, r3
 	mov	r1, #10
@@ -407,32 +849,142 @@ main:
 	add	r3, r3, #48
 	lsl	r3, r3, #24
 	lsr	r3, r3, #24
-	ldr	r2, [r7, #64]
+	ldr	r2, [r7, #84]
 	mov	r0, r2
 	mov	r1, r3
 	bl	uputc
-	ldr	r2, [r7, #64]
-	ldr	r3, .L28+36
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+28
 	mov	r0, r2
 	mov	r1, r3
 	bl	uprints
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+44
+	mov	r0, r2
+	mov	r1, r3
+	bl	uprints
+	ldr	r3, [r7, #80]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidiv
+	mov	r3, r0
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	ldr	r2, [r7, #84]
+	mov	r0, r2
+	mov	r1, r3
+	bl	uputc
+	ldr	r3, [r7, #80]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidivmod
+	mov	r3, r1
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	ldr	r2, [r7, #84]
+	mov	r0, r2
+	mov	r1, r3
+	bl	uputc
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+48
+	mov	r0, r2
+	mov	r1, r3
+	bl	uprints
+	ldr	r3, [r7, #76]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidiv
+	mov	r3, r0
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	ldr	r2, [r7, #84]
+	mov	r0, r2
+	mov	r1, r3
+	bl	uputc
+	ldr	r3, [r7, #76]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidivmod
+	mov	r3, r1
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	ldr	r2, [r7, #84]
+	mov	r0, r2
+	mov	r1, r3
+	bl	uputc
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+52
+	mov	r0, r2
+	mov	r1, r3
+	bl	uprints
+	ldr	r3, [r7, #72]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidiv
+	mov	r3, r0
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	ldr	r2, [r7, #84]
+	mov	r0, r2
+	mov	r1, r3
+	bl	uputc
+	ldr	r3, [r7, #72]
+	mov	r0, r3
+	mov	r1, #10
+	bl	__aeabi_uidivmod
+	mov	r3, r1
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	add	r3, r3, #48
+	lsl	r3, r3, #24
+	lsr	r3, r3, #24
+	ldr	r2, [r7, #84]
+	mov	r0, r2
+	mov	r1, r3
+	bl	uputc
+	ldr	r2, [r7, #84]
+	ldr	r3, .L49+56
+	mov	r0, r2
+	mov	r1, r3
+	bl	uprints
+	mov	r3, #0
 	mov	r0, r3
 	mov	sp, r7
-	add	sp, sp, #72
+	add	sp, sp, #96
 	@ sp needed for prologue
 	pop	{r7, pc}
-.L29:
+.L50:
 	.align	2
-.L28:
+.L49:
+	.word	timer
+	.word	270409728
 	.word	uart
-	.word	.LC2
-	.word	.LC4
-	.word	.LC6
-	.word	.LC8
-	.word	.LC10
+	.word	.LC7
+	.word	.LC9
+	.word	.LC11
+	.word	.LC13
+	.word	.LC15
 	.word	sum
 	.word	v
-	.word	.LC14
-	.word	.LC16
+	.word	.LC19
+	.word	.LC21
+	.word	.LC23
+	.word	.LC25
+	.word	.LC27
 	.size	main, .-main
 	.ident	"GCC: (Sourcery CodeBench Lite 2011.09-69) 4.6.1"

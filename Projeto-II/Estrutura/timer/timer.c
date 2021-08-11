@@ -1,12 +1,62 @@
-#include "display.h"
+/*#include "display.h"
 #include "string.h"
-#include "sp804.h"
+#include "sp804.h"*/
+
+#define TLOAD 0x0
+#define TVALUE 0x1
+#define TCNTL 0x2
+#define TINTCLR 0x3
+#define TRIS 0x4
+#define TMIS 0x5
+#define TBGLOAD 0x6
+#define MAX_TIMER_NUMBER 4
 
 
+typedef unsigned int u32;
+typedef unsigned char u8;
+
+
+
+typedef volatile struct timer
+{
+    u32 *base;            // timer's base address; as u32 pointer
+    u32 tick, hh, mm, ss; // per timer data area
+    u8 clock[16];
+} TIMER;
+
+volatile TIMER timer[MAX_TIMER_NUMBER];
+
+u32 strcmp(u8 *s1, u8 *s2)
+{
+    while ((*s1++ == *s2++) && (*s1 != 0) && (*s2 != 0))
+        ;
+    if (*s1 == 0 && *s2 == 0)
+    {
+        return 0;
+    }
+    return 1;
+}
+
+u8* strcpy(u8 *s1, u8 *s2)
+{
+    while(*s2 != 0)
+    {
+        *s1++ = *s2++;
+    }
+    *s1 = '\0';
+    return s1;
+}
+
+u32 strlen(const u8 *s)
+{
+    u32 i = 0;
+    while (*s++ != '\0') i++;
+    return i;
+}
 
 void timer_init_single(TIMER *tp, u32 base)
 {
-    int i;
+    //int i;
     //kprintf("timer_init_single()\n");
     tp->base = (u32 *)base;
     *(tp->base + TLOAD) = 0x0; // reset
@@ -62,7 +112,7 @@ void timer_init_single(TIMER *tp, u32 base)
 void timer_start(u32 n) // timer_start(0), 1, etc.
 {
     TIMER *tp = &timer[n];
-    kprintf("timer_start %d base=%x\n", n, tp->base);
+    //kprintf("timer_start %d base=%x\n", n, tp->base);
     *(tp->base + TCNTL) |= 0x80; // set enable bit 7
 }
 
@@ -72,7 +122,8 @@ void timer_stop(u32 n) // stop a timer
     *(tp->base + TCNTL) &= 0x7F; // clear enable bit 7
 }
 
-u32 timer_clearInterrupt(u32 n) // timer_start(0), 1, etc.
+//u32 timer_clearInterrupt(u32 n) // timer_start(0), 1, etc.
+void timer_clearInterrupt(u32 n) // timer_start(0), 1, etc.
 {
     TIMER *tp = &timer[n];
     *(tp->base + TINTCLR) = 0xFFFFFFFF;
@@ -103,7 +154,7 @@ void timer_handler(u32 n)
         t->clock[3] = '0' + (t->mm / 10);
         t->clock[1] = '0' + (t->hh % 10);
         t->clock[0] = '0' + (t->hh / 10);
-        kprintf("Timer [%d]: %s\n", n, (u8 *)&t->clock[0]);
+        //kprintf("Timer [%d]: %s\n", n, (u8 *)&t->clock[0]);
     }
     //color = n; // display in different color
     // for (i = 0; i < 8; i++)

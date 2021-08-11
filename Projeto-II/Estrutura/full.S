@@ -335,16 +335,20 @@ strlen:
 	ldmfd	sp!, {fp}
 	bx	lr
 	.size	strlen, .-strlen
+	.section	.rodata
+	.align	2
+.LC0:
+	.ascii	"00:00:00\000"
+	.text
 	.align	2
 	.global	timer_init_single
 	.type	timer_init_single, %function
 timer_init_single:
 	@ args = 0, pretend = 0, frame = 8
 	@ frame_needed = 1, uses_anonymous_args = 0
-	@ link register save eliminated.
-	str	fp, [sp, #-4]!
-	add	fp, sp, #0
-	sub	sp, sp, #12
+	stmfd	sp!, {fp, lr}
+	add	fp, sp, #4
+	sub	sp, sp, #8
 	str	r0, [fp, #-8]
 	str	r1, [fp, #-12]
 	ldr	r2, [fp, #-12]
@@ -392,9 +396,22 @@ timer_init_single:
 	str	r3, [r2, #8]
 	ldr	r2, [fp, #-8]
 	str	r3, [r2, #4]
-	add	sp, fp, #0
-	ldmfd	sp!, {fp}
-	bx	lr
+	ldr	r3, [fp, #-8]
+	add	r2, r3, #20
+	ldr	r3, .L28
+	mov	r1, r2
+	mov	r2, r3
+	mov	r3, #9
+	mov	r0, r1
+	mov	r1, r2
+	mov	r2, r3
+	bl	memcpy
+	sub	sp, fp, #4
+	ldmfd	sp!, {fp, pc}
+.L29:
+	.align	2
+.L28:
+	.word	.LC0
 	.size	timer_init_single, .-timer_init_single
 	.align	2
 	.global	timer_start
@@ -413,7 +430,7 @@ timer_start:
 	add	r3, r3, r2
 	mov	r3, r3, asl #2
 	mov	r2, r3
-	ldr	r3, .L29
+	ldr	r3, .L31
 	add	r3, r2, r3
 	str	r3, [fp, #-8]
 	ldr	r3, [fp, #-8]
@@ -426,9 +443,9 @@ timer_start:
 	add	sp, fp, #0
 	ldmfd	sp!, {fp}
 	bx	lr
-.L30:
+.L32:
 	.align	2
-.L29:
+.L31:
 	.word	timer
 	.size	timer_start, .-timer_start
 	.align	2
@@ -448,7 +465,7 @@ timer_stop:
 	add	r3, r3, r2
 	mov	r3, r3, asl #2
 	mov	r2, r3
-	ldr	r3, .L32
+	ldr	r3, .L34
 	add	r3, r2, r3
 	str	r3, [fp, #-8]
 	ldr	r3, [fp, #-8]
@@ -461,15 +478,15 @@ timer_stop:
 	add	sp, fp, #0
 	ldmfd	sp!, {fp}
 	bx	lr
-.L33:
+.L35:
 	.align	2
-.L32:
+.L34:
 	.word	timer
 	.size	timer_stop, .-timer_stop
 	.align	2
-	.global	timer_clearInterrupt
-	.type	timer_clearInterrupt, %function
-timer_clearInterrupt:
+	.global	timer_handler
+	.type	timer_handler, %function
+timer_handler:
 	@ args = 0, pretend = 0, frame = 16
 	@ frame_needed = 1, uses_anonymous_args = 0
 	@ link register save eliminated.
@@ -483,39 +500,7 @@ timer_clearInterrupt:
 	add	r3, r3, r2
 	mov	r3, r3, asl #2
 	mov	r2, r3
-	ldr	r3, .L35
-	add	r3, r2, r3
-	str	r3, [fp, #-8]
-	ldr	r3, [fp, #-8]
-	ldr	r3, [r3, #0]
-	add	r3, r3, #12
-	mvn	r2, #0
-	str	r2, [r3, #0]
-	add	sp, fp, #0
-	ldmfd	sp!, {fp}
-	bx	lr
-.L36:
-	.align	2
-.L35:
-	.word	timer
-	.size	timer_clearInterrupt, .-timer_clearInterrupt
-	.align	2
-	.global	timer_handler
-	.type	timer_handler, %function
-timer_handler:
-	@ args = 0, pretend = 0, frame = 16
-	@ frame_needed = 1, uses_anonymous_args = 0
-	stmfd	sp!, {fp, lr}
-	add	fp, sp, #4
-	sub	sp, sp, #16
-	str	r0, [fp, #-16]
-	ldr	r2, [fp, #-16]
-	mov	r3, r2
-	mov	r3, r3, asl #3
-	add	r3, r3, r2
-	mov	r3, r3, asl #2
-	mov	r2, r3
-	ldr	r3, .L40
+	ldr	r3, .L39
 	add	r3, r2, r3
 	str	r3, [fp, #-8]
 	ldr	r3, [fp, #-8]
@@ -526,7 +511,7 @@ timer_handler:
 	ldr	r3, [fp, #-8]
 	ldr	r3, [r3, #4]
 	cmp	r3, #20
-	bne	.L38
+	bne	.L36
 	ldr	r3, [fp, #-8]
 	mov	r2, #0
 	str	r2, [r3, #4]
@@ -538,7 +523,7 @@ timer_handler:
 	ldr	r3, [fp, #-8]
 	ldr	r3, [r3, #16]
 	cmp	r3, #60
-	bne	.L39
+	bne	.L38
 	ldr	r3, [fp, #-8]
 	mov	r2, #0
 	str	r2, [r3, #16]
@@ -550,7 +535,7 @@ timer_handler:
 	ldr	r3, [fp, #-8]
 	ldr	r3, [r3, #12]
 	cmp	r3, #60
-	bne	.L39
+	bne	.L38
 	ldr	r3, [fp, #-8]
 	mov	r2, #0
 	str	r2, [r3, #12]
@@ -559,10 +544,10 @@ timer_handler:
 	add	r2, r3, #1
 	ldr	r3, [fp, #-8]
 	str	r2, [r3, #8]
-.L39:
+.L38:
 	ldr	r3, [fp, #-8]
 	ldr	r1, [r3, #16]
-	ldr	r3, .L40+4
+	ldr	r3, .L39+4
 	umull	r2, r3, r1, r3
 	mov	r2, r3, lsr #3
 	mov	r3, r2
@@ -577,7 +562,7 @@ timer_handler:
 	strb	r2, [r3, #27]
 	ldr	r3, [fp, #-8]
 	ldr	r2, [r3, #16]
-	ldr	r3, .L40+4
+	ldr	r3, .L39+4
 	umull	r1, r3, r2, r3
 	mov	r3, r3, lsr #3
 	and	r3, r3, #255
@@ -587,7 +572,7 @@ timer_handler:
 	strb	r2, [r3, #26]
 	ldr	r3, [fp, #-8]
 	ldr	r1, [r3, #12]
-	ldr	r3, .L40+4
+	ldr	r3, .L39+4
 	umull	r2, r3, r1, r3
 	mov	r2, r3, lsr #3
 	mov	r3, r2
@@ -602,7 +587,7 @@ timer_handler:
 	strb	r2, [r3, #24]
 	ldr	r3, [fp, #-8]
 	ldr	r2, [r3, #12]
-	ldr	r3, .L40+4
+	ldr	r3, .L39+4
 	umull	r1, r3, r2, r3
 	mov	r3, r3, lsr #3
 	and	r3, r3, #255
@@ -612,7 +597,7 @@ timer_handler:
 	strb	r2, [r3, #23]
 	ldr	r3, [fp, #-8]
 	ldr	r1, [r3, #8]
-	ldr	r3, .L40+4
+	ldr	r3, .L39+4
 	umull	r2, r3, r1, r3
 	mov	r2, r3, lsr #3
 	mov	r3, r2
@@ -627,7 +612,7 @@ timer_handler:
 	strb	r2, [r3, #21]
 	ldr	r3, [fp, #-8]
 	ldr	r2, [r3, #8]
-	ldr	r3, .L40+4
+	ldr	r3, .L39+4
 	umull	r1, r3, r2, r3
 	mov	r3, r3, lsr #3
 	and	r3, r3, #255
@@ -635,149 +620,114 @@ timer_handler:
 	and	r2, r3, #255
 	ldr	r3, [fp, #-8]
 	strb	r2, [r3, #20]
-.L38:
-	ldr	r0, [fp, #-16]
-	bl	timer_clearInterrupt
-	sub	sp, fp, #4
-	ldmfd	sp!, {fp, pc}
-.L41:
-	.align	2
+.L36:
+	add	sp, fp, #0
+	ldmfd	sp!, {fp}
+	bx	lr
 .L40:
+	.align	2
+.L39:
 	.word	timer
 	.word	-858993459
 	.size	timer_handler, .-timer_handler
 	.section	.rodata
 	.align	2
-.LC0:
+.LC1:
 	.ascii	"\012\015Enter lines from serial terminal 0\012\015\000"
 	.align	2
-.LC1:
+.LC2:
 	.ascii	"   \000"
 	.align	2
-.LC2:
+.LC3:
 	.ascii	"\012\015\000"
 	.align	2
-.LC3:
+.LC4:
 	.ascii	"end\000"
 	.align	2
-.LC4:
+.LC5:
 	.ascii	"Compute sum of array:\012\015\000"
 	.align	2
-.LC5:
+.LC6:
 	.ascii	"sum = \000"
 	.align	2
-.LC6:
-	.ascii	"h:\000"
-	.align	2
 .LC7:
-	.ascii	" m:\000"
-	.align	2
-.LC8:
-	.ascii	" s:\000"
-	.align	2
-.LC9:
 	.ascii	"\012\015END OF RUN\012\015\000"
 	.text
 	.align	2
 	.global	main
 	.type	main, %function
 main:
-	@ args = 0, pretend = 0, frame = 96
+	@ args = 0, pretend = 0, frame = 80
 	@ frame_needed = 1, uses_anonymous_args = 0
 	stmfd	sp!, {fp, lr}
 	add	fp, sp, #4
-	sub	sp, sp, #96
-	ldr	r3, .L49
-	str	r3, [fp, #-12]
+	sub	sp, sp, #80
 	ldr	r0, [fp, #-12]
-	ldr	r1, .L49+4
+	ldr	r1, .L48
 	bl	timer_init_single
 	bl	uart_init
-	ldr	r3, .L49+8
+	ldr	r3, .L48+4
 	str	r3, [fp, #-16]
-	mov	r0, #0
-	bl	timer_start
 	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+12
+	ldr	r1, .L48+8
 	bl	uprints
-	b	.L45
-.L48:
+	b	.L44
+.L47:
 	mov	r0, r0	@ nop
-.L45:
-	sub	r3, fp, #96
+.L44:
+	sub	r3, fp, #80
 	ldr	r0, [fp, #-16]
 	mov	r1, r3
 	bl	upgets
 	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+16
+	ldr	r1, .L48+12
 	bl	uprints
-	sub	r3, fp, #96
+	sub	r3, fp, #80
 	ldr	r0, [fp, #-16]
 	mov	r1, r3
 	bl	uprints
 	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+20
+	ldr	r1, .L48+16
 	bl	uprints
-	sub	r3, fp, #96
+	sub	r3, fp, #80
 	mov	r0, r3
-	ldr	r1, .L49+24
+	ldr	r1, .L48+20
 	bl	strcmp
 	mov	r3, r0
 	cmp	r3, #0
-	bne	.L48
+	bne	.L47
 	mov	r0, r0	@ nop
-	ldr	r3, [fp, #-12]
-	ldr	r3, [r3, #8]
-	str	r3, [fp, #-20]
-	ldr	r3, [fp, #-12]
-	ldr	r3, [r3, #12]
-	str	r3, [fp, #-24]
-	ldr	r3, [fp, #-12]
-	ldr	r3, [r3, #16]
-	str	r3, [fp, #-28]
-	ldr	r3, [fp, #-20]
-	mov	r2, #3600
-	mul	r1, r2, r3
-	ldr	r2, [fp, #-24]
-	mov	r3, r2
-	mov	r3, r3, asl #4
-	rsb	r3, r2, r3
-	mov	r3, r3, asl #2
-	add	r2, r1, r3
-	ldr	r3, [fp, #-28]
-	add	r3, r2, r3
-	str	r3, [fp, #-32]
 	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+28
+	ldr	r1, .L48+24
 	bl	uprints
-	ldr	r3, .L49+32
+	ldr	r3, .L48+28
 	mov	r2, #0
 	str	r2, [r3, #0]
 	mov	r3, #0
 	str	r3, [fp, #-8]
-	b	.L46
-.L47:
-	ldr	r3, .L49+36
+	b	.L45
+.L46:
+	ldr	r3, .L48+32
 	ldr	r2, [fp, #-8]
 	ldr	r2, [r3, r2, asl #2]
-	ldr	r3, .L49+32
+	ldr	r3, .L48+28
 	ldr	r3, [r3, #0]
 	add	r2, r2, r3
-	ldr	r3, .L49+32
+	ldr	r3, .L48+28
 	str	r2, [r3, #0]
 	ldr	r3, [fp, #-8]
 	add	r3, r3, #1
 	str	r3, [fp, #-8]
-.L46:
+.L45:
 	ldr	r3, [fp, #-8]
 	cmp	r3, #9
-	ble	.L47
+	ble	.L46
 	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+40
+	ldr	r1, .L48+36
 	bl	uprints
-	ldr	r3, .L49+32
+	ldr	r3, .L48+28
 	ldr	r3, [r3, #0]
-	ldr	r2, .L49+44
+	ldr	r2, .L48+40
 	smull	r1, r2, r3, r2
 	mov	r2, r2, asr #2
 	mov	r3, r3, asr #31
@@ -788,9 +738,9 @@ main:
 	ldr	r0, [fp, #-16]
 	mov	r1, r3
 	bl	uputc
-	ldr	r3, .L49+32
+	ldr	r3, .L48+28
 	ldr	r1, [r3, #0]
-	ldr	r3, .L49+44
+	ldr	r3, .L48+40
 	smull	r2, r3, r1, r3
 	mov	r2, r3, asr #2
 	mov	r3, r1, asr #31
@@ -807,118 +757,26 @@ main:
 	mov	r1, r3
 	bl	uputc
 	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+28
-	bl	uprints
-	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+48
-	bl	uprints
-	ldr	r2, [fp, #-20]
-	ldr	r3, .L49+52
-	umull	r1, r3, r2, r3
-	mov	r3, r3, lsr #3
-	and	r3, r3, #255
-	add	r3, r3, #48
-	and	r3, r3, #255
-	ldr	r0, [fp, #-16]
-	mov	r1, r3
-	bl	uputc
-	ldr	r1, [fp, #-20]
-	ldr	r3, .L49+52
-	umull	r2, r3, r1, r3
-	mov	r2, r3, lsr #3
-	mov	r3, r2
-	mov	r3, r3, asl #2
-	add	r3, r3, r2
-	mov	r3, r3, asl #1
-	rsb	r2, r3, r1
-	and	r3, r2, #255
-	add	r3, r3, #48
-	and	r3, r3, #255
-	ldr	r0, [fp, #-16]
-	mov	r1, r3
-	bl	uputc
-	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+56
-	bl	uprints
-	ldr	r2, [fp, #-24]
-	ldr	r3, .L49+52
-	umull	r1, r3, r2, r3
-	mov	r3, r3, lsr #3
-	and	r3, r3, #255
-	add	r3, r3, #48
-	and	r3, r3, #255
-	ldr	r0, [fp, #-16]
-	mov	r1, r3
-	bl	uputc
-	ldr	r1, [fp, #-24]
-	ldr	r3, .L49+52
-	umull	r2, r3, r1, r3
-	mov	r2, r3, lsr #3
-	mov	r3, r2
-	mov	r3, r3, asl #2
-	add	r3, r3, r2
-	mov	r3, r3, asl #1
-	rsb	r2, r3, r1
-	and	r3, r2, #255
-	add	r3, r3, #48
-	and	r3, r3, #255
-	ldr	r0, [fp, #-16]
-	mov	r1, r3
-	bl	uputc
-	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+60
-	bl	uprints
-	ldr	r2, [fp, #-28]
-	ldr	r3, .L49+52
-	umull	r1, r3, r2, r3
-	mov	r3, r3, lsr #3
-	and	r3, r3, #255
-	add	r3, r3, #48
-	and	r3, r3, #255
-	ldr	r0, [fp, #-16]
-	mov	r1, r3
-	bl	uputc
-	ldr	r1, [fp, #-28]
-	ldr	r3, .L49+52
-	umull	r2, r3, r1, r3
-	mov	r2, r3, lsr #3
-	mov	r3, r2
-	mov	r3, r3, asl #2
-	add	r3, r3, r2
-	mov	r3, r3, asl #1
-	rsb	r2, r3, r1
-	and	r3, r2, #255
-	add	r3, r3, #48
-	and	r3, r3, #255
-	ldr	r0, [fp, #-16]
-	mov	r1, r3
-	bl	uputc
-	ldr	r0, [fp, #-16]
-	ldr	r1, .L49+64
+	ldr	r1, .L48+44
 	bl	uprints
 	mov	r3, #0
 	mov	r0, r3
 	sub	sp, fp, #4
 	ldmfd	sp!, {fp, pc}
-.L50:
-	.align	2
 .L49:
-	.word	timer
+	.align	2
+.L48:
 	.word	270409728
 	.word	uart
-	.word	.LC0
 	.word	.LC1
 	.word	.LC2
 	.word	.LC3
 	.word	.LC4
+	.word	.LC5
 	.word	sum
 	.word	v
-	.word	.LC5
-	.word	1717986919
 	.word	.LC6
-	.word	-858993459
+	.word	1717986919
 	.word	.LC7
-	.word	.LC8
-	.word	.LC9
 	.size	main, .-main
 	.ident	"GCC: (Sourcery CodeBench Lite 2011.09-69) 4.6.1"
