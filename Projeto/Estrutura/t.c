@@ -1,89 +1,151 @@
-#include "string.c"
-#define printf kprintf
-char *tab = "0123456789ABCDEF";
-#include "uart.c"
-#include "sdc.c"
-#include <stdint.h>
-typedef uint32_t u32;
+#include "types.h"
+#include "versatilepb_pl190_vic.h"
+#include "uart.h"
+#include "vid.h"
+#include "timer.h"
+#define VERSATILEPB_SP804_TIMER0 0x101E2000
+int sum;
+int v[] = {1,2,3,4,5,6,7,8,9,10};
 
-void copy_vectors(void)
-{ // same as before }
-    void IRQ_handler()
+extern UART uart[4];
+extern void uart_handler(UART *up);
+
+extern void uprints(UART *up, u8 *s);
+extern void ugets(UART *up, char *s);
+
+extern TIMER timer[4];
+//extern void timer_init_single(TIMER *tp, u32 base);
+
+int strcmp(char *s1, char *s2)
+{
+    while((*s1++==*s2++)&&(*s1!=0)&&(*s2!=0));
+    if(*s1==0 && *s2==0)
     {
-        int vicstatus, sicstatus;
-        int ustatus, kstatus;
-        // read VIC SIV status registers to find out which interrupt
-        vicstatus = VIC_STATUS;
-        sicstatus = SIC_STATUS;
-        // VIC status BITs: timer0=4, uart0=13, uart1=14, SIC=31: KBD at 3
-        if (vicstatus & (1 << 4))
-        { // bit 4: timer0
-            timer_handler(0);
-        }
-        if (vicstatus & (1 << 12))
-        { // Bit 12: UART0
-            uart_handler(&uart[0]);
-        }
-        if (vicstatus & (1 << 13))
-        { // bit 13: UART1
-            uart_handler(&uart[1]);
-        }
-        if (vicstatus & (1 << 31))
-        { // SIC interrupts=bit_31 on VIC
-            if (sicstatus & (1 << 3))
-            { // KBD at IRQ3 of SIC
-                kbd_handler();
-            }
-            if (sicstatus & (1 << 22))
-            { // SDC at IRQ22 of SIC
-                sdc_handler();
-            }
-        }
+        return 0;
     }
-    char rbuf[512], wbuf[512];
-    char *line[2] = {"THIS IS A TEST LINE", "this is a test line"};
-    int main()
+    return 1;
+}
+
+u8* strcpy(u8 *s1, u8 *s2)
+{
+    while(*s2 != 0)
     {
-        int i, sector, N;
-        fbuf_init();
-        kbd_init();
-        uart_init();
-        /* enable timer0,1, uart0,1 SIC interrupts */
-        VIC_INTENABLE = (1 << 4);   // timer0,1 at bit4
-        VIC_INTENABLE |= (1 << 12); // UART0 at bit12
-        VIC_INTENABLE |= (1 << 13); // UART1 at bit13
-        VIC_INTENABLE |= (1 << 31); // SIC to VIC's IRQ31
-        /* enable KBD and SDC IRQ */
-        SIC_INTENABLE = (1 << 3);   // KBD int=bit3 on SIC
-        SIC_INTENABLE |= (1 << 22); // SDC int=bit22 on SIC
-        SIC_ENSET = (1 << 3);       // KBD int=3 on SIC
-        SIC_ENSET |= (1 << 22);     // SDC int=22 on SIC
-        timer_init();
-        timer_start(0);
-        /* Code for testing UART and KBD drivers are omitted */
-        printf("test SDC DRIVER\n");
-        sdc_init();
-        N = 1; // Write|Read N sectors of SDC
-        for (sector = 0; sector < N; sector++)
-        {
-            printf("WRITE sector %d: ", sector);
-            memset(wbuf, ' ', 512);  // blank out wbuf
-            for (i = 0; i < 12; i++) // write lines to wbuf
-                strcpy(wbuf + i * 40, line[sector % 2]);
-            put_sector(sector, wbuf);
-        }
-        printf("\n");
-        for (sector = 0; sector < N; sector++)
-        {
-            printf("READ sector %d\n", sector);
-            get_sector(sector, rbuf);
-            for (i = 0; i < 512; i++)
-            {
-                printf("%c", rbuf[i]);
-            }
-            printf("\n");
-        }
-        printf("in while(1) loop: enter keys from KBD or UART\n");
-        while (1)
-            ;
+        *s1++ = *s2++;
     }
+    *s1 = '\0';
+    return s1;
+}
+void upgets(UART *up, char *s)
+{
+    while((*s = ugetc(up))!='\r'){
+        uputc(up, *s);
+        s++;
+    }
+    *s = 0;
+}
+
+int div(int a, int b){
+
+    int r=0;
+
+    while(a>=b){
+        a=a-b;
+        r++;
+    }
+    return(r);
+
+}
+void main()
+{
+    int i,segs,wpm;
+    u8 *p;
+    char string[64];
+    UART *up;
+
+	u32 h,m,s;
+	TIMER *tp = &timer[0];
+    VIC_INTENABLE |= UART0_IRQ_VIC_BIT;
+    VIC_INTENABLE |= TIMER0_IRQ_VIC_BIT;
+
+    uart_init();
+    timer_init_single(tp, VERSATILEPB_SP804_TIMER0);
+    
+    up= &uart[0];
+
+    timer_start(0);
+    uprints(up, "\n\rEnter lines from serial terminal 0\n\r");
+
+    u8 c = '0';
+    while(1)
+    {
+
+        upgets(up, string);
+        uprints(up, "   ");
+        uprints(up, string);
+        uprints(up, "\n\r");
+        if(strcmp(string, "end")==0){
+            break;
+        }  
+    }
+
+    timer_stop(0);
+	h = tp->hh;
+	m = tp->mm;
+	s = tp->ss;
+	segs =  60*m + s;
+    uprints(up, "Compute sum of array:\n\r");
+    sum = 0;
+    for(i=0; i<10; i++){
+        sum += v[i];
+    }
+
+    wpm = div(sum, (int)segs);
+    uprints(up, "sum = ");
+    uputc(up, (sum/10)+'0');
+    uputc(up, (sum%10)+'0');
+	uprints(up, "\n\rExecution Time:\n\r");
+	uprints(up, "h:");
+	uputc(up, (h/10)+'0');
+    uputc(up, (h%10)+'0');
+	uprints(up, " m:");
+	uputc(up, (m/10)+'0');
+    uputc(up, (m%10)+'0');
+	uprints(up, " s:");
+	uputc(up, (s/10)+'0');
+    uputc(up, (s%10)+'0');
+    
+    uprints(up, "\n\rAverage typing speed:\n\r");
+    uputc(up, ((int)wpm/100)+'0');
+    uputc(up, ((int)wpm/10)+'0');
+    uprints(up, ",");
+    uputc(up, ((int)wpm%10)+'0');
+    uprints(up, "\n\rEND OF RUN\n\r");
+}
+
+void copy_vectors()
+{
+    extern u32 vectors_start, vectors_end;
+    u32 *vectors_src = &vectors_start;
+    u32 *vectors_dst = (u32 *)0;
+    while(vectors_src < &vectors_end)
+    {
+        *vectors_dst++ = *vectors_src++;
+    }
+}
+
+void IRQ_handler()
+{
+    u32 vicstatus = VIC_STATUS;
+    //UART 0
+    if(vicstatus & UART0_IRQ_VIC_BIT)
+    {
+        
+        uart_handler(&uart[0]);
+    }
+
+    if(vicstatus & TIMER0_IRQ_VIC_BIT)
+    {
+        timer_handler(0);
+    }
+
+}

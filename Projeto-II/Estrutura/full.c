@@ -201,7 +201,7 @@ int main()
             break;
         }        
     }
-	//stimer_stop(0);
+	stimer_stop(0);
 	h = tp->hh;
 	m = tp->mm;
 	s = tp->ss;
@@ -215,7 +215,7 @@ int main()
     uprints(up, "sum = ");
     uputc(up, (sum/10)+'0');
     uputc(up, (sum%10)+'0');
-	uprints(up, "Compute sum of array:\n\r");
+	uprints(up, "\n\rCompute sum of array:\n\r");
 	uprints(up, "h:");
 	uputc(up, (h/10)+'0');
     uputc(up, (h%10)+'0');
