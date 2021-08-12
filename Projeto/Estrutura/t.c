@@ -77,7 +77,7 @@ void main()
     up= &uart[0];
 
     timer_start(0);
-    uprints(up, "\n\rEnter lines from serial terminal, with at monst 128 characters\n\r");
+    uprints(up, "\n\rEnter lines from serial terminal, with at most 128 characters\n\r");
 
     u8 c = '0';
     while(1)
@@ -99,7 +99,7 @@ void main()
 	s = tp->ss;
 	segs =  3600*h + 60*m + s;
 
-    uprints(up, "Number os Typed Characters:\n\r");
+    uprints(up, "Number of Typed Characters:\n\r");
     uprints(up, "Chars = ");
     uputc(up, (sum/10)+'0');
     uputc(up, (sum%10)+'0');
