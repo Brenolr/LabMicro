@@ -1,11 +1,8 @@
 #include "types.h"
 #include "versatilepb_pl190_vic.h"
 #include "uart.h"
-#include "vid.h"
 #include "timer.h"
 #define VERSATILEPB_SP804_TIMER0 0x101E2000
-int sum;
-int v[] = {1,2,3,4,5,6,7,8,9,10};
 
 extern UART uart[4];
 extern void uart_handler(UART *up);
@@ -55,13 +52,20 @@ int div(int a, int b){
     return(r);
 
 }
+
+int sizeString(char *string){
+    int i;
+    for(i = 0; string[i] != '\0'; i++);
+    return(i);
+}
+
 void main()
 {
-    int i,segs,wpm;
+    int i,segs,wpm,sum = 0;
     u8 *p;
-    char string[64];
+    char string[128];
     UART *up;
-
+    
 	u32 h,m,s;
 	TIMER *tp = &timer[0];
     VIC_INTENABLE |= UART0_IRQ_VIC_BIT;
@@ -73,16 +77,17 @@ void main()
     up= &uart[0];
 
     timer_start(0);
-    uprints(up, "\n\rEnter lines from serial terminal 0\n\r");
+    uprints(up, "\n\rEnter lines from serial terminal, with at monst 128 characters\n\r");
 
     u8 c = '0';
     while(1)
     {
-
+        uprints(up, "> ");
         upgets(up, string);
-        uprints(up, "   ");
+        uprints(up, "\n\rYou typed: ");
         uprints(up, string);
         uprints(up, "\n\r");
+        sum = sum + sizeString(string);
         if(strcmp(string, "end")==0){
             break;
         }  
@@ -92,17 +97,14 @@ void main()
 	h = tp->hh;
 	m = tp->mm;
 	s = tp->ss;
-	segs =  60*m + s;
-    uprints(up, "Compute sum of array:\n\r");
-    sum = 0;
-    for(i=0; i<10; i++){
-        sum += v[i];
-    }
+	segs =  3600*h + 60*m + s;
 
-    wpm = div(sum, (int)segs);
-    uprints(up, "sum = ");
+    uprints(up, "Number os Typed Characters:\n\r");
+    uprints(up, "Chars = ");
     uputc(up, (sum/10)+'0');
     uputc(up, (sum%10)+'0');
+
+
 	uprints(up, "\n\rExecution Time:\n\r");
 	uprints(up, "h:");
 	uputc(up, (h/10)+'0');
@@ -113,12 +115,18 @@ void main()
 	uprints(up, " s:");
 	uputc(up, (s/10)+'0');
     uputc(up, (s%10)+'0');
-    
+
+    wpm = (int)div(sum*100, (int)segs);//mutiplicamos o sum por 10 para termos 1 casa depois da virgula
+
     uprints(up, "\n\rAverage typing speed:\n\r");
-    uputc(up, ((int)wpm/100)+'0');
-    uputc(up, ((int)wpm/10)+'0');
-    uprints(up, ",");
+
+    if((int)(wpm/10000)!= 0) uputc(up, ((int)wpm/10000)%10+'0');//só prita se for diferente de 0
+    if((int)(wpm/1000)!= 0) uputc(up, ((int)wpm/1000)%10+'0');//só prita se for diferente de 0
+    uputc(up, ((int)wpm/100%10)+'0');
+    uprints(up, ".");
+    uputc(up, ((int)wpm/10)%10+'0');
     uputc(up, ((int)wpm%10)+'0');
+    uprints(up, " char/s");
     uprints(up, "\n\rEND OF RUN\n\r");
 }
 
